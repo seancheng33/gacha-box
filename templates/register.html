@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}注册 · 欧皇运维所{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>注册</h1>
+  <p class="sub">注册即送 1000 金币，够抽一次十连加一次单抽</p>
+  <form method="post" class="form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label>用户名<input name="username" minlength="3" maxlength="20" required autofocus
+        placeholder="3~20 个字符"></label>
+    <label>密码<input name="password" type="password" minlength="6" required
+        placeholder="至少 6 位"></label>
+    <button class="btn primary block" type="submit">创建账号</button>
+  </form>
+  <p class="switch">已有账号？<a href="{{ url_for('login') }}">去登录</a></p>
+</div>
+{% endblock %}

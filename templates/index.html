@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}拆盲盒 · 欧皇运维所{% endblock %}
+{% block content %}
+<section class="stats">
+  <div class="stat">
+    <span class="label">金币</span>
+    <strong id="statCoins">{{ me['coins'] }}</strong>
+  </div>
+  <div class="stat wide">
+    <span class="label">保底进度 <em>再抽 {{ PITY_LIMIT - me['pity_count'] }} 次必出 SSR</em></span>
+    <div class="bar"><i id="pityBar" style="width: {{ (me['pity_count'] * 100 / PITY_LIMIT)|round(1) }}%"></i></div>
+    <strong id="statPity">{{ me['pity_count'] }} / {{ PITY_LIMIT }}</strong>
+  </div>
+  <div class="stat">
+    <span class="label">图鉴收集</span>
+    <strong>{{ got }} / {{ total }}</strong>
+    <small>{{ pct }}%</small>
+  </div>
+  <div class="stat">
+    <form method="post" action="{{ url_for('checkin') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <button class="btn ghost small" type="submit">签到 +{{ SIGNIN_REWARD }}</button>
+    </form>
+  </div>
+</section>
+
+<section class="stage">
+  <div class="giftbox" id="box">
+    <div class="lid"></div>
+    <div class="body"><span>？</span></div>
+    <div class="glow"></div>
+  </div>
+  <p class="stage-tip">点下面按钮开盒，SSR 会发光</p>
+  <div class="draw-actions">
+    <button class="btn primary big" data-mode="single">单抽 · <b>{{ COST_SINGLE }}</b> 币</button>
+    <button class="btn gold big" data-mode="ten">十连 · <b>{{ COST_TEN }}</b> 币<small>保底史诗</small></button>
+  </div>
+</section>
+
+<div class="cols">
+  <section class="panel">
+    <h2>最近开盒</h2>
+    {% if recent %}
+    <ul class="recent">
+      {% for d in recent %}
+      <li>
+        <span class="dot" style="background: {{ RARITY[d['rarity']]['color'] }}"></span>
+        <span class="rname">{{ RARITY[d['rarity']]['name'] }}</span>
+        <span class="rn">{{ d['emoji'] }} {{ d['name'] }}</span>
+        {% if d['is_pity'] %}<span class="tag pity">保底</span>{% endif %}
+        <time>{{ d['created_at'][5:16] }}</time>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">还没抽过，盒子在等你</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>出率公示</h2>
+    <ul class="odds">
+      {% for r in [5,4,3,2,1] %}
+      <li>
+        <span class="dot" style="background: {{ RARITY[r]['color'] }}"></span>
+        <span class="rname">{{ RARITY[r]['name'] }}</span>
+        <span class="rate">{{ '%.2f'|format(weights[r]) }}%</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="hint">第 {{ PITY_LIMIT }} 抽必出 SSR；十连至少 1 张史诗。</p>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="overlay-inner">
+    <div class="drawing" id="drawing">
+      <div class="ray"></div>
+      <p>开盒中…</p>
+    </div>
+    <div class="result-grid" id="resultGrid"></div>
+    <p class="overlay-msg" id="overlayMsg" hidden></p>
+    <div class="overlay-actions">
+      <button class="btn ghost" id="skipBtn" type="button">跳过动画</button>
+      <button class="btn primary" id="closeBtn" type="button" hidden>收下</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.GAME = {
+  rarity: {{ RARITY|tojson }},
+  costSingle: {{ COST_SINGLE }},
+  costTen: {{ COST_TEN }},
+  pityLimit: {{ PITY_LIMIT }}
+};
+</script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}

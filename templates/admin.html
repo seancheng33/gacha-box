@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}后台 · 欧皇运维所{% endblock %}
+{% block content %}
+<h1 class="page-title">管理后台</h1>
+
+<div class="cols">
+  <section class="panel">
+    <h2>概率表</h2>
+    <form method="post" action="{{ url_for('admin.update_weights') }}" class="form inline">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      {% for r in [1,2,3,4,5] %}
+      <label class="w-row">
+        <span class="dot" style="background: {{ RARITY[r]['color'] }}"></span>
+        {{ RARITY[r]['name'] }}
+        <input name="w{{ r }}" type="number" step="0.01" min="0" max="100"
+               value="{{ '%.2f'|format(weights[r]) }}">
+        <span class="unit">%</span>
+      </label>
+      {% endfor %}
+      <button class="btn primary" type="submit">保存（合计须 100%）</button>
+    </form>
+    <p class="hint">保存后立即生效；SSR 概率必须大于 0。</p>
+  </section>
+
+  <section class="panel">
+    <h2>发放金币</h2>
+    <form method="post" action="{{ url_for('admin.give_coins') }}" class="form inline">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label>用户名<input name="username" required placeholder="精确用户名"></label>
+      <label>数量<input name="amount" type="number" required placeholder="可为负"></label>
+      <button class="btn primary" type="submit">发放</button>
+    </form>
+    <h2 class="mt">新增卡牌</h2>
+    <form method="post" action="{{ url_for('admin.add_card') }}" class="form">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="row2">
+        <label>卡名<input name="name" required maxlength="24"></label>
+        <label>emoji<input name="emoji" maxlength="4" placeholder="🎴"></label>
+      </div>
+      <div class="row2">
+        <label>等级
+          <select name="rarity">
+            {% for r in [5,4,3,2,1] %}<option value="{{ r }}">{{ RARITY[r]['name'] }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>描述<input name="description" maxlength="60"></label>
+      </div>
+      <button class="btn primary" type="submit">加入卡池</button>
+    </form>
+  </section>
+</div>
+
+<section class="panel">
+  <h2>卡池（{{ cards|length }} 张）</h2>
+  <div class="admin-cards">
+    {% for c in cards %}
+    <div class="admin-card {{ 'off' if not c['enabled'] }}">
+      <form method="post" action="{{ url_for('admin.edit_card', card_id=c['id']) }}" class="edit-form">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <span class="cid">#{{ c['id'] }}</span>
+        <select name="rarity">
+          {% for r in [5,4,3,2,1] %}
+          <option value="{{ r }}" {{ 'selected' if c['rarity'] == r }}>{{ RARITY[r]['name'] }}</option>
+          {% endfor %}
+        </select>
+        <input name="emoji" value="{{ c['emoji'] }}" maxlength="4" class="w-emoji">
+        <input name="name" value="{{ c['name'] }}" maxlength="24" class="w-name">
+        <input name="description" value="{{ c['description'] }}" maxlength="60" class="w-desc">
+        <button class="btn ghost small" type="submit">保存</button>
+      </form>
+      <form method="post" action="{{ url_for('admin.toggle_card', card_id=c['id']) }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="btn {{ 'ghost' if c['enabled'] else 'primary' }} small" type="submit">
+          {{ '下架' if c['enabled'] else '上架' }}
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <h2>用户（前 200）</h2>
+  <table class="tbl">
+    <thead><tr><th>ID</th><th>用户名</th><th>金币</th><th>保底计数</th><th>管理员</th></tr></thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u['id'] }}</td><td>{{ u['username'] }}</td><td>{{ u['coins'] }}</td>
+        <td>{{ u['pity_count'] }}</td><td>{{ '是' if u['is_admin'] else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

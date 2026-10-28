@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}排行榜 · 欧皇运维所{% endblock %}
+{% block content %}
+<h1 class="page-title">排行榜</h1>
+<div class="rank-cols">
+  <section class="panel">
+    <h2>图鉴收集</h2>
+    <ol class="rank-list">
+      {% for row in by_collection %}
+      <li><span class="idx">{{ loop.index }}</span><span class="nm">{{ row['username'] }}</span><b>{{ row['value'] }}</b></li>
+      {% else %}<li class="empty">暂无数据</li>{% endfor %}
+    </ol>
+  </section>
+  <section class="panel">
+    <h2>SSR 持有</h2>
+    <ol class="rank-list">
+      {% for row in by_ssr %}
+      <li><span class="idx">{{ loop.index }}</span><span class="nm">{{ row['username'] }}</span><b>{{ row['value'] }}</b></li>
+      {% else %}<li class="empty">暂无数据</li>{% endfor %}
+    </ol>
+  </section>
+  <section class="panel">
+    <h2>累计抽卡</h2>
+    <ol class="rank-list">
+      {% for row in by_draws %}
+      <li><span class="idx">{{ loop.index }}</span><span class="nm">{{ row['username'] }}</span><b>{{ row['value'] }}</b></li>
+      {% else %}<li class="empty">暂无数据</li>{% endfor %}
+    </ol>
+  </section>
+</div>
+{% endblock %}

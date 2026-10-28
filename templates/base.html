@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}欧皇运维所{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('index') if me else url_for('login') }}">欧皇<span>运维所</span></a>
+  {% if me %}
+  <nav class="nav">
+    <a href="{{ url_for('index') }}">盲盒</a>
+    <a href="{{ url_for('album') }}">图鉴</a>
+    <a href="{{ url_for('ranking') }}">排行榜</a>
+    {% if me['is_admin'] %}<a href="{{ url_for('admin.index') }}">后台</a>{% endif %}
+  </nav>
+  <div class="wallet">
+    <span class="coin">币 <b id="coinNum">{{ me['coins'] }}</b></span>
+    <span class="who">{{ me['username'] }}</span>
+    <form method="post" action="{{ url_for('logout') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <button class="link-btn" type="submit">退出</button>
+    </form>
+  </div>
+  {% endif %}
+</header>
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}
+  <div class="flashes">
+    {% for cat, m in msgs %}<div class="flash {{ cat }}">{{ m }}</div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main class="wrap">
+{% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>
