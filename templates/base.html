@@ -1,10 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{% block title %}欧皇运维所{% endblock %}</title>
+<script>
+/* 主题引导：必须在样式表之前执行，避免刷新时闪一下深色 */
+(function () {
+  try {
+    var t = localStorage.getItem('gacha-theme');
+    if (t !== 'light' && t !== 'dark') t = 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) { /* 隐私模式下读不到 localStorage 时保持默认深色 */ }
+})();
+</script>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -17,15 +27,22 @@
     <a href="{{ url_for('ranking') }}">排行榜</a>
     {% if me['is_admin'] %}<a href="{{ url_for('admin.index') }}">后台</a>{% endif %}
   </nav>
-  <div class="wallet">
-    <span class="coin">币 <b id="coinNum">{{ me['coins'] }}</b></span>
-    <span class="who">{{ me['username'] }}</span>
-    <form method="post" action="{{ url_for('logout') }}">
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-      <button class="link-btn" type="submit">退出</button>
-    </form>
-  </div>
   {% endif %}
+  <div class="topbar-right">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换主题">
+      <span class="ico" aria-hidden="true">☀️</span><span class="txt">浅色</span>
+    </button>
+    {% if me %}
+    <div class="wallet">
+      <span class="coin">币 <b id="coinNum">{{ me['coins'] }}</b></span>
+      <span class="who">{{ me['username'] }}</span>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="link-btn" type="submit">退出</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
 </header>
 
 {% with msgs = get_flashed_messages(with_categories=true) %}
@@ -39,6 +56,31 @@
 <main class="wrap">
 {% block content %}{% endblock %}
 </main>
+
+<script>
+/* 主题切换：写入 localStorage，下次打开沿用 */
+(function () {
+  var btn = document.getElementById('themeToggle');
+  if (!btn) return;
+  var root = document.documentElement;
+  var ico = btn.querySelector('.ico');
+  var txt = btn.querySelector('.txt');
+  function sync() {
+    var light = root.getAttribute('data-theme') === 'light';
+    if (ico) ico.textContent = light ? '🌙' : '☀️';
+    if (txt) txt.textContent = light ? '深色' : '浅色';
+    btn.setAttribute('aria-label', light ? '切换到深色主题' : '切换到浅色主题');
+    btn.title = light ? '切换到深色主题' : '切换到浅色主题';
+  }
+  btn.addEventListener('click', function () {
+    var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('gacha-theme', next); } catch (e) {}
+    sync();
+  });
+  sync();
+})();
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

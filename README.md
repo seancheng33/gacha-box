@@ -7,7 +7,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-32%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-38%20passed-brightgreen)
 
 ---
 
@@ -32,11 +32,26 @@
 
 ## 界面预览
 
+**深色（默认）**
+
 | 抽卡主页 | 图鉴 |
 | :---: | :---: |
 | ![主页](docs/screenshots/home.png) | ![图鉴](docs/screenshots/album.png) |
 
-> 截图取自真实登录态下运行中的页面，非设计稿。
+**浅色**
+
+| 抽卡主页 | 开盒结果 |
+| :---: | :---: |
+| ![浅色主页](docs/screenshots/home-light.png) | ![浅色开盒](docs/screenshots/draw-light.png) |
+
+> 截图取自真实登录态下运行中的页面，非设计稿。两套配色由同一份 CSS 变量驱动，切换即时生效。
+
+### 主题
+
+右上角按钮一键切换深色 / 浅色，选择存进 `localStorage`，下次打开沿用；默认深色。主题在样式表加载前就已确定（`<head>` 内的引导脚本），所以刷新不会闪一下白。
+
+实现方式：所有颜色收敛成 `:root` 的一组语义变量（`--bg` / `--panel` / `--text` / `--gold` / `--rar-1~5` …），浅色主题只覆盖 `html[data-theme="light"]` 里的变量值。稀有度配色也走 `.r1`~`.r5` 类（不再内联 `--c`），否则浅底上的 SSR 金色文字会糊掉。想加第三套配色（比如护眼绿），照着变量表再写一段覆盖即可，不用碰任何 HTML/JS。
+
 
 ---
 
@@ -54,6 +69,7 @@
 | 动画可跳过 | 连点党直接看结果 |
 | 图鉴 | 按等级筛选、已拥有显示 ×N、未收集显示问号剪影、收集进度条 |
 | 排行榜 | 收集度 / SSR 数量 / 抽卡次数三榜 |
+| 主题切换 | 深色 / 浅色一键切换，`localStorage` 记忆，刷新不闪白 |
 
 ### 管理侧
 
@@ -163,7 +179,7 @@ PORT=5055 GACHA_DB=./smoke.db .venv/bin/python app.py
 ## 测试
 
 ```bash
-# 单元 / 集成测试：32 个用例
+# 单元 / 集成测试：38 个用例
 .venv\Scripts\python.exe -m unittest discover -s tests -v
 
 # 真实 HTTP 端到端冒烟（另开一个终端先起服务）
@@ -183,6 +199,7 @@ set PORT=5055
 | 收集 / 排行 | 重复卡累加、进度统计、三榜渲染 |
 | 后台 | 越权 403、概率合计 ≠ 100% 拒绝保存、加卡后卡池扩容 |
 | 安全 | 缺 CSRF token 的 POST 被拒 |
+| 主题 | 深浅两套变量齐全、引导脚本先于样式表、模板/JS 不内联稀有度色 |
 
 端到端冒烟走真实服务与真实 cookie，13 个步骤：注册 → 主页 → 十连（验保底与扣费）→ 余额不足被拒 → 图鉴入册 → 排行 → 签到 → 退出 → 重登。
 
@@ -203,10 +220,10 @@ gacha-box/
 ├── seed_cards.py       # 30 张卡种子数据（INSERT OR IGNORE，可重复执行）
 ├── templates/          # Jinja2 模板：登录、注册、抽卡、图鉴、排行、后台、错误页
 ├── static/
-│   ├── style.css       # 深色主题、等级配色、开盒动画
+│   ├── style.css       # 主题变量（深/浅）、等级配色、开盒动画
 │   └── app.js          # 抽卡交互、翻卡动画、音效合成
 ├── tests/
-│   ├── test_gacha.py   # 32 个单元 / 集成用例
+│   ├── test_gacha.py   # 38 个单元 / 集成用例
 │   └── smoke_e2e.py    # 真实 HTTP 端到端冒烟
 ├── docs/               # 架构与系统分析、卡池方案、界面截图
 ├── requirements.txt

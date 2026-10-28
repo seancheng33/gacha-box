@@ -376,5 +376,58 @@ class SeedTests(BaseCase):
         self.assertEqual({1: 6, 2: 6, 3: 6, 4: 6, 5: 6}, {r["rarity"]: r["c"] for r in rows})
 
 
+class ThemeTests(BaseCase):
+    """双主题：深色默认 + 浅色可切换，且稀有度配色走 CSS 变量。"""
+
+    def setUp(self):
+        super().setUp()
+        self.root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def _read(self, *parts):
+        with open(os.path.join(self.root, *parts), encoding="utf-8") as f:
+            return f.read()
+
+    def test_login_page_has_theme_bootstrap(self):
+        html = self.client.get("/login").get_data(as_text=True)
+        self.assertIn('data-theme="dark"', html, "默认主题应为深色")
+        self.assertIn('id="themeToggle"', html, "未登录页也应有切换按钮")
+        self.assertIn("gacha-theme", html, "应把选择写入 localStorage")
+
+    def test_bootstrap_runs_before_stylesheet(self):
+        html = self.client.get("/login").get_data(as_text=True)
+        self.assertLess(
+            html.index("gacha-theme"), html.index("style.css"),
+            "主题引导脚本必须在样式表之前执行，否则刷新会闪一下深色",
+        )
+
+    def test_logged_in_page_has_toggle(self):
+        self.register()
+        html = self.client.get("/").get_data(as_text=True)
+        self.assertIn('id="themeToggle"', html)
+        self.assertIn("topbar-right", html)
+
+    def test_css_defines_light_theme(self):
+        css = self._read("static", "style.css")
+        self.assertIn('html[data-theme="light"]', css)
+        for token in ("--bg", "--panel", "--text", "--gold", "--rar-5", "--overlay"):
+            self.assertGreaterEqual(
+                css.count(token + ":"), 2, "%s 需要深色/浅色两套取值" % token
+            )
+        self.assertIn("color-scheme:light", css.replace(" ", ""))
+
+    def test_templates_do_not_inline_rarity_colors(self):
+        self.register()
+        for path in ("/", "/album", "/rank"):
+            html = self.client.get(path).get_data(as_text=True)
+            self.assertNotIn('style="--c:', html, "%s 仍有内联稀有度色，浅色主题会失效" % path)
+        self.assertNotIn("--c:'", self._read("static", "app.js"))
+
+    def test_rarity_classes_rendered(self):
+        self.register()
+        html = self.client.get("/album").get_data(as_text=True)
+        self.assertIn('class="card r5', html.replace("  ", " "))
+        self.assertIn('class="chip r5', html.replace("  ", " "))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

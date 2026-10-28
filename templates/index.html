@@ -44,7 +44,7 @@
     <ul class="recent">
       {% for d in recent %}
       <li>
-        <span class="dot" style="background: {{ RARITY[d['rarity']]['color'] }}"></span>
+        <span class="dot r{{ d['rarity'] }}"></span>
         <span class="rname">{{ RARITY[d['rarity']]['name'] }}</span>
         <span class="rn">{{ d['emoji'] }} {{ d['name'] }}</span>
         {% if d['is_pity'] %}<span class="tag pity">保底</span>{% endif %}
@@ -62,7 +62,7 @@
     <ul class="odds">
       {% for r in [5,4,3,2,1] %}
       <li>
-        <span class="dot" style="background: {{ RARITY[r]['color'] }}"></span>
+        <span class="dot r{{ r }}"></span>
         <span class="rname">{{ RARITY[r]['name'] }}</span>
         <span class="rate">{{ '%.2f'|format(weights[r]) }}%</span>
       </li>

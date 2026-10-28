@@ -10,7 +10,7 @@
       <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
       {% for r in [1,2,3,4,5] %}
       <label class="w-row">
-        <span class="dot" style="background: {{ RARITY[r]['color'] }}"></span>
+        <span class="dot r{{ r }}"></span>
         {{ RARITY[r]['name'] }}
         <input name="w{{ r }}" type="number" step="0.01" min="0" max="100"
                value="{{ '%.2f'|format(weights[r]) }}">

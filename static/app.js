@@ -47,7 +47,7 @@
   }
 
   function cardHTML(c, index) {
-    const meta = RARITY[String(c.rarity)] || { name: '', color: '#8b93a1', glow: 'rgba(0,0,0,0)' };
+    const meta = RARITY[String(c.rarity)] || { name: '' };
     const art = c.image
       ? '<img class="card-art" src="' + esc(c.image) + '" alt="">'
       : '<div class="card-emoji">' + esc(c.emoji) + '</div>';
@@ -55,8 +55,8 @@
     if (c.is_new) badges.push('<span class="badge new">NEW</span>');
     if (c.is_pity) badges.push('<span class="badge pity">保底</span>');
     if (c.count > 1) badges.push('<span class="badge">×' + c.count + '</span>');
-    return '<article class="card r' + c.rarity + '" style="--c:' + meta.color +
-      ';--g:' + meta.glow + ';--i:' + index + '">' +
+    // 稀有度配色交给 CSS 的 .r1~.r5，主题切换时能自动换色
+    return '<article class="card r' + c.rarity + '" style="--i:' + index + '">' +
       '<div class="card-top"><span>' + esc(meta.name) + '</span></div>' +
       art +
       '<h3>' + esc(c.name) + '</h3>' +

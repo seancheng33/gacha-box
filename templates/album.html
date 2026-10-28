@@ -10,16 +10,14 @@
   <div class="filters">
     <a class="chip {{ 'on' if not rarity }}" href="{{ url_for('album') }}">全部</a>
     {% for r in [5,4,3,2,1] %}
-    <a class="chip {{ 'on' if rarity == r }}" href="{{ url_for('album', rarity=r) }}"
-       style="--c: {{ RARITY[r]['color'] }}">{{ RARITY[r]['name'] }}</a>
+    <a class="chip r{{ r }} {{ 'on' if rarity == r }}" href="{{ url_for('album', rarity=r) }}">{{ RARITY[r]['name'] }}</a>
     {% endfor %}
   </div>
 </section>
 
 <section class="card-grid">
   {% for c in cards %}
-  <article class="card r{{ c['rarity'] }} {{ 'owned' if c['count'] else 'locked' }}"
-           style="--c: {{ RARITY[c['rarity']]['color'] }}; --g: {{ RARITY[c['rarity']]['glow'] }}">
+  <article class="card r{{ c['rarity'] }} {{ 'owned' if c['count'] else 'locked' }}">
     <div class="card-top">
       <span class="rar">{{ RARITY[c['rarity']]['name'] }}</span>
       {% if c['count'] > 1 %}<span class="dup">×{{ c['count'] }}</span>{% endif %}
