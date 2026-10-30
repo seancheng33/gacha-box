@@ -234,7 +234,7 @@ h1{font-size:22px}h2{font-size:15px;margin-bottom:12px}h3{font-size:14px}
 .card::after{content:"";position:absolute;inset:0;background:radial-gradient(120px 60px at 50% 0%,var(--g,transparent),transparent 70%);pointer-events:none}
 .card-top{display:flex;justify-content:space-between;font-size:11px;color:var(--c,var(--muted));position:relative;z-index:1}
 .card-emoji{font-size:34px;text-align:center;margin:10px 0 6px;position:relative;z-index:1}
-.card-art{display:block;width:100%;border-radius:8px;margin:8px 0 6px;position:relative;z-index:1}
+.card-art{display:block;width:100%;aspect-ratio:1/1;border-radius:8px;margin:8px 0 6px;position:relative;z-index:1}
 .card h3{font-size:13px;text-align:center;line-height:1.35;min-height:36px;position:relative;z-index:1}
 .card .desc{font-size:11px;color:var(--muted);text-align:center;margin:6px 0 0;line-height:1.45;position:relative;z-index:1}
 .card .dup{color:var(--gold);font-size:11px}

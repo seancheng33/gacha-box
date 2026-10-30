@@ -24,14 +24,16 @@
     </div>
     {% if c['count'] %}
       {% if c['image'] %}
-      <img class="card-art" src="{{ c['image'] }}" alt="{{ c['name'] }}">
+      <img class="card-art" src="{{ c['image'] }}" alt="{{ c['name'] }}"
+           loading="lazy" decoding="async">
       {% else %}
       <div class="card-emoji">{{ c['emoji'] }}</div>
       {% endif %}
       <h3>{{ c['name'] }}</h3>
       <p class="desc">{{ c['description'] }}</p>
     {% else %}
-      <img class="card-art" src="/static/cards/back.png" alt="">
+      <img class="card-art" src="/static/cards/back.png" alt=""
+           loading="lazy" decoding="async">
       <h3>未收集</h3>
       <p class="desc">继续抽，总会遇见的</p>
     {% endif %}

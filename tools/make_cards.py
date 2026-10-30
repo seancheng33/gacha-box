@@ -19,13 +19,20 @@ EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 W, H = 300, 300
 
 # 等级配色：(描边色, 中心光晕色, 底色)
+# ⚠️ 描边色必须与 gacha.RARITY_META / style.css 的 --rar-N 完全一致，
+#    否则卡框（CSS）和卡面图（本脚本）会两套色，同屏可见错色。
+# 色阶设计：中性灰 → 蓝 → 紫 → 橙 → 金，逐级升温，相邻两级色相不重叠。
 LEVEL = {
-    1: ("#6b86b8", "rgba(90,125,185,.26)", "#0e1626"),
-    2: ("#3fb5a8", "rgba(63,181,168,.26)", "#0b1f22"),
-    3: ("#a86bd8", "rgba(168,107,216,.28)", "#170f2a"),
-    4: ("#e0a12e", "rgba(224,161,46,.30)", "#22160a"),
-    5: ("#f5c451", "rgba(245,196,81,.34)", "#261c08"),
+    1: ("#8b93a1", "rgba(139,147,161,.22)", "#14171d"),  # 普通：中性灰（去蓝，别再发青）
+    2: ("#4a90d9", "rgba(74,144,217,.26)", "#0b1526"),   # 稀有：蓝（与灰拉开色相）
+    3: ("#a86bd8", "rgba(168,107,216,.28)", "#170f2a"),  # 史诗：紫
+    4: ("#e08a2e", "rgba(224,138,46,.30)", "#22160a"),   # 传说：橙
+    5: ("#f5c451", "rgba(245,196,81,.26)", "#261c08"),   # SSR：金
 }
+
+ICON_BOX = 175   # 图标框边长（300px 画布的 58%）；原 158 偏小，视觉重量不足
+HALO_BOX = 192   # 中心光晕直径，需比图标外扩一圈
+ICON_FILL = 86   # 图标内容目标边长（viewBox 单位）→ 归一化后约占图标框的 86%
 
 # ---------------- 30 个图标（viewBox 0 0 100 100） ----------------
 ICONS = {
@@ -267,23 +274,26 @@ body{background:%(bg)s}
 .art{position:relative;width:%(w)dpx;height:%(h)dpx;overflow:hidden;
      background:radial-gradient(circle at 50%% 50%%, %(glow)s 0%%, %(bg)s 66%%);}
 /* 中心光晕 */
-.halo{position:absolute;left:50%%;top:50%%;width:186px;height:186px;margin:-93px 0 0 -93px;
-      border-radius:50%%;background:radial-gradient(circle, %(glow)s 0%%, transparent 64%%);
-      filter:blur(8px)}
+.halo{position:absolute;left:50%%;top:50%%;width:%(halo)dpx;height:%(halo)dpx;
+      transform:translate(-50%%,-50%%);
+      border-radius:50%%;background:radial-gradient(circle, %(glow)s 0%%, transparent 62%%);
+      filter:blur(10px)}
 /* 四角三角装饰 */
 .c{position:absolute;width:0;height:0;opacity:.5}
 .c.tl{left:7px;top:7px;border-top:9px solid %(edge)s;border-right:9px solid transparent}
 .c.tr{right:7px;top:7px;border-top:9px solid %(edge)s;border-left:9px solid transparent}
 .c.bl{left:7px;bottom:7px;border-bottom:9px solid %(edge)s;border-right:9px solid transparent}
 .c.br{right:7px;bottom:7px;border-bottom:9px solid %(edge)s;border-left:9px solid transparent}
-.icon{position:absolute;left:50%%;top:50%%;width:158px;height:158px;margin:-79px 0 0 -79px;
-      filter:drop-shadow(0 0 12px %(glow)s)}
-/* SSR 放射光（克制，避免整张过曝） */
-.rays{position:absolute;left:50%%;top:50%%;width:300px;height:300px;margin:-150px 0 0 -150px;
-      border-radius:50%%;opacity:.13;
+.icon{position:absolute;left:50%%;top:50%%;width:%(icon)dpx;height:%(icon)dpx;
+      transform:translate(-50%%,-50%%);
+      filter:drop-shadow(0 0 11px %(glow)s)}
+/* SSR 放射光（克制，避免整张过曝）；内圈留空需大于图标半径，否则射线会穿过图标 */
+.rays{position:absolute;left:50%%;top:50%%;width:300px;height:300px;
+      transform:translate(-50%%,-50%%);
+      border-radius:50%%;opacity:.10;
       background:repeating-conic-gradient(from 0deg, %(edge)s 0deg 2.5deg, transparent 2.5deg 14deg);
-      -webkit-mask-image:radial-gradient(circle, transparent 22%%, #000 46%%, transparent 72%%);
-      mask-image:radial-gradient(circle, transparent 22%%, #000 46%%, transparent 72%%)}
+      -webkit-mask-image:radial-gradient(circle, transparent 40%%, #000 58%%, transparent 82%%);
+      mask-image:radial-gradient(circle, transparent 40%%, #000 58%%, transparent 82%%)}
 """
 
 BACK_CSS = """
@@ -314,14 +324,28 @@ body{background:#0b1226}
 
 def card_html(cid, _name, rarity):
     edge, glow, bg = LEVEL[rarity]
-    css = BASE_CSS % dict(w=W, h=H, bg=bg, glow=glow, edge=edge)
+    css = BASE_CSS % dict(w=W, h=H, bg=bg, glow=glow, edge=edge,
+                          icon=ICON_BOX, halo=HALO_BOX)
     rays = '<div class="rays"></div>' if rarity == 5 else ""
+    # 每个图标在 100x100 的 viewBox 里留白各不相同（内容常常只占 50%~60%），
+    # 只放大图标框会让"内容"依旧偏小。这里在截图前用 getBBox() 量出真实包围盒，
+    # 等比缩放到 ICON_FILL 单位并重新居中，保证 30 张图的视觉重量一致。
+    fit = """<script>
+(function(){
+  var g=document.getElementById('g');
+  var b=g.getBBox();
+  var cx=b.x+b.width/2, cy=b.y+b.height/2;
+  var k=Math.max(b.width,b.height)||100;
+  var sc=Math.min(%(fill)d/k, 2.4);
+  g.setAttribute('transform','translate(50 50) scale('+sc+') translate('+(-cx)+' '+(-cy)+')');
+})();
+</script>""" % dict(fill=ICON_FILL)
     return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>%s</style></head>
 <body><div class="art">
 %s<div class="halo"></div>
-<svg class="icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">%s</svg>
+<svg class="icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g id="g">%s</g></svg>
 <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
-</div></body></html>""" % (css, rays, ICONS[cid])
+%s</div></body></html>""" % (css, rays, ICONS[cid], fit)
 
 
 def back_html():
